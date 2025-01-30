@@ -1,5 +1,6 @@
-'use client';
-import { LogisticsTrackerApp } from '@/components/LogisticsTrackerApp';
+"use client";
+
+import { LogisticsTrackerApp } from "./_sections/LogisticsTrackerApp";
 
 export default function Home() {
   return (

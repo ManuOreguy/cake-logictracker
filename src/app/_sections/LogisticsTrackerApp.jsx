@@ -1,23 +1,29 @@
-'use client';
-import React, { useState } from 'react';
-import { Sidebar } from './Sidebar';
-import { ArmadoViajes } from './ArmadoViajes';
-import { HistoricoViajes } from './HistoricoViajes';
-import { COT } from './COT';
-import { SECTIONS, SUBSECTIONS } from '@/constants';
-import { generateRandomOrders, sortOrders } from '@/utils/orderUtils';
+"use client";
+import { SECTIONS, SUBSECTIONS } from "@/src/constants";
+import React, { useState } from "react";
+import { Sidebar } from "../_components/Sidebar";
+import { ArmadoViajes } from "../_components/ArmadoViajes";
+import { HistoricoViajes } from "../_components/HistoricoViajes";
+import { COT } from "../_components/COT";
+import { sortOrders } from "@/src/utils/orderUtils";
+import { generateRandomOrders } from "@/src/utils/orderUtils";
 
 export const LogisticsTrackerApp = () => {
   // Navigation state
   const [currentSection, setCurrentSection] = useState(SECTIONS.LOGICTRACKER);
-  const [currentSubsection, setCurrentSubsection] = useState(SUBSECTIONS.ARMADO_VIAJES);
+  const [currentSubsection, setCurrentSubsection] = useState(
+    SUBSECTIONS.ARMADO_VIAJES
+  );
 
   // Orders state
   const [sapOrders, setSapOrders] = useState([]);
   const [travelOrders, setTravelOrders] = useState([]);
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [showSAPConfirmation, setShowSAPConfirmation] = useState(false);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: "ascending",
+  });
 
   // Historic travels state
   const [historicTravels, setHistoricTravels] = useState([]);
@@ -30,9 +36,13 @@ export const LogisticsTrackerApp = () => {
   };
 
   const handlePrepareTravel = () => {
-    const ordersToMove = sapOrders.filter(order => selectedOrders.includes(order.id));
+    const ordersToMove = sapOrders.filter((order) =>
+      selectedOrders.includes(order.id)
+    );
     setTravelOrders([...travelOrders, ...ordersToMove]);
-    setSapOrders(sapOrders.filter(order => !selectedOrders.includes(order.id)));
+    setSapOrders(
+      sapOrders.filter((order) => !selectedOrders.includes(order.id))
+    );
     setSelectedOrders([]);
   };
 
@@ -41,15 +51,15 @@ export const LogisticsTrackerApp = () => {
 
     const newTrip = {
       tripNumber: tripCounter,
-      sentDate: new Date().toISOString().split('T')[0],
+      sentDate: new Date().toISOString().split("T")[0],
       totalAmount: travelOrders.reduce((sum, order) => sum + order.amount, 0),
       orders: travelOrders,
-      status: 'Active'
+      status: "Active",
     };
 
     setTimeout(() => {
-      setHistoricTravels(prev => [...prev, newTrip]);
-      setTripCounter(prev => prev + 1);
+      setHistoricTravels((prev) => [...prev, newTrip]);
+      setTripCounter((prev) => prev + 1);
       setTravelOrders([]);
       setShowSAPConfirmation(false);
     }, 3000);
@@ -61,41 +71,42 @@ export const LogisticsTrackerApp = () => {
   };
 
   const toggleOrderSelection = (orderId) => {
-    setSelectedOrders(prev => 
-      prev.includes(orderId) 
-        ? prev.filter(id => id !== orderId) 
+    setSelectedOrders((prev) =>
+      prev.includes(orderId)
+        ? prev.filter((id) => id !== orderId)
         : [...prev, orderId]
     );
   };
 
   const handleSort = (key) => {
-    setSortConfig(config => ({
+    setSortConfig((config) => ({
       key,
-      direction: config.key === key && config.direction === 'ascending' ? 'descending' : 'ascending'
+      direction:
+        config.key === key && config.direction === "ascending"
+          ? "descending"
+          : "ascending",
     }));
   };
 
   const toggleTripExpansion = (tripNumber) => {
-    setExpandedTripIds(prev => 
+    setExpandedTripIds((prev) =>
       prev.includes(tripNumber)
-        ? prev.filter(id => id !== tripNumber)
+        ? prev.filter((id) => id !== tripNumber)
         : [...prev, tripNumber]
     );
   };
 
   const handleTripCancellation = (tripNumber) => {
-    setHistoricTravels(prev => 
-      prev.map(trip => 
-        trip.tripNumber === tripNumber 
-          ? { ...trip, status: 'Cancelled' }
-          : trip
+    setHistoricTravels((prev) =>
+      prev.map((trip) =>
+        trip.tripNumber === tripNumber ? { ...trip, status: "Cancelled" } : trip
       )
     );
   };
 
   return (
     <div className="flex h-screen">
-      <Sidebar 
+      <Sidebar
         currentSection={currentSection}
         currentSubsection={currentSubsection}
         onSectionChange={setCurrentSection}
@@ -105,7 +116,7 @@ export const LogisticsTrackerApp = () => {
       <div className="flex-1 p-4 overflow-y-auto">
         {currentSection === SECTIONS.LOGICTRACKER ? (
           currentSubsection === SUBSECTIONS.ARMADO_VIAJES ? (
-            <ArmadoViajes 
+            <ArmadoViajes
               sapOrders={sortOrders(sapOrders, sortConfig)}
               selectedOrders={selectedOrders}
               travelOrders={travelOrders}
@@ -119,7 +130,7 @@ export const LogisticsTrackerApp = () => {
               onSort={handleSort}
             />
           ) : (
-            <HistoricoViajes 
+            <HistoricoViajes
               trips={historicTravels}
               expandedTripIds={expandedTripIds}
               onToggleExpansion={toggleTripExpansion}
