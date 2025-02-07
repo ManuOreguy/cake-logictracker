@@ -6,7 +6,8 @@ import { ArmadoViajes } from "../_components/ArmadoViajes";
 import { HistoricoViajes } from "../_components/HistoricoViajes";
 import { COT } from "../_components/COT";
 import { sortOrders } from "@/src/utils/orderUtils";
-import { generateRandomOrders } from "@/src/utils/orderUtils";
+import { getOrdersSAP } from "@/src/utils/getOrdersSAP";
+import { TravelPreparationTable } from "../_components/ArmadoViajes/TravelPreparationTable";
 
 export const LogisticsTrackerApp = () => {
   // Navigation state
@@ -30,18 +31,23 @@ export const LogisticsTrackerApp = () => {
   const [tripCounter, setTripCounter] = useState(1);
   const [expandedTripIds, setExpandedTripIds] = useState([]);
 
-  const handleFetchOpenOrders = () => {
-    setSapOrders(generateRandomOrders());
-    setSelectedOrders([]);
+  const handleFetchOpenOrders = async () => {
+    try {
+      const data = await getOrdersSAP('DP_PEDIDOS_ABIERTOS');
+      setSapOrders(data);
+      setSelectedOrders([]);
+    } catch (error) {
+      console.error('Error al obtener órdenes:', error);
+    }
   };
 
   const handlePrepareTravel = () => {
     const ordersToMove = sapOrders.filter((order) =>
-      selectedOrders.includes(order.id)
+      selectedOrders.includes(order.DocNum)
     );
     setTravelOrders([...travelOrders, ...ordersToMove]);
     setSapOrders(
-      sapOrders.filter((order) => !selectedOrders.includes(order.id))
+      sapOrders.filter((order) => !selectedOrders.includes(order.DocNum))
     );
     setSelectedOrders([]);
   };
@@ -52,7 +58,7 @@ export const LogisticsTrackerApp = () => {
     const newTrip = {
       tripNumber: tripCounter,
       sentDate: new Date().toISOString().split("T")[0],
-      totalAmount: travelOrders.reduce((sum, order) => sum + order.amount, 0),
+      totalAmount: travelOrders.reduce((sum, order) => sum + order.DocTotal, 0),
       orders: travelOrders,
       status: "Active",
     };
@@ -128,7 +134,13 @@ export const LogisticsTrackerApp = () => {
               onClearTravels={handleClearTravels}
               onToggleOrderSelection={toggleOrderSelection}
               onSort={handleSort}
-            />
+            >
+              <TravelPreparationTable 
+                orders={sortOrders(travelOrders, sortConfig)} 
+                sortConfig={sortConfig}
+                onSort={handleSort}
+              />
+            </ArmadoViajes>
           ) : (
             <HistoricoViajes
               trips={historicTravels}
