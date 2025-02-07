@@ -1,7 +1,7 @@
- 'use client';
-import React from 'react';
-import { SAPOrdersTable } from './SAPOrdersTable';
-import { TravelPreparationTable } from './TravelPreparationTable';
+"use client";
+import React, { useRef, useEffect } from "react";
+import { SAPOrdersTable } from "./SAPOrdersTable";
+import { TravelPreparationTable } from "./TravelPreparationTable";
 
 export const ArmadoViajes = ({
   sapOrders,
@@ -16,6 +16,17 @@ export const ArmadoViajes = ({
   onToggleOrderSelection,
   onSort
 }) => {
+  const travelTableRef = useRef(null);
+
+  useEffect(() => {
+    if (travelOrders.length > 0 && travelTableRef.current) {
+      travelTableRef.current.scrollIntoView({ 
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+  }, [travelOrders.length]);
+
   return (
     <div className="space-y-4">
       {showSAPConfirmation && (
@@ -28,13 +39,27 @@ export const ArmadoViajes = ({
       )}
 
       <div className="bg-white shadow-md rounded-lg p-4">
-        <h2 className="text-xl font-semibold mb-4">SAP Orders</h2>
-        <button 
-          onClick={onFetchOpenOrders}
-          className="mb-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Traer pedidos abiertos
-        </button>
+        <h2 className="text-xl font-semibold mb-4">Pedidos SAP</h2>
+        <div className="flex justify-between mb-4">
+          <button 
+            onClick={onFetchOpenOrders}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Traer pedidos abiertos
+          </button>
+          
+          <button 
+            onClick={onPrepareTravel}
+            disabled={selectedOrders.length === 0}
+            className={`px-4 py-2 rounded ${
+              selectedOrders.length === 0 
+                ? 'bg-gray-300 cursor-not-allowed' 
+                : 'bg-green-500 text-white hover:bg-green-600'
+            }`}
+          >
+            Preparar Viaje
+          </button>
+        </div>
         
         <SAPOrdersTable 
           orders={sapOrders}
@@ -43,48 +68,32 @@ export const ArmadoViajes = ({
           sortConfig={sortConfig}
           onSort={onSort}
         />
-
-        <button 
-          onClick={onPrepareTravel}
-          disabled={selectedOrders.length === 0}
-          className={`mt-4 px-4 py-2 rounded ${
-            selectedOrders.length === 0 
-              ? 'bg-gray-300 cursor-not-allowed' 
-              : 'bg-green-500 text-white hover:bg-green-600'
-          }`}
-        >
-          Viaje a armar
-        </button>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg p-4">
-        <h2 className="text-xl font-semibold mb-4">Travel Preparation</h2>
-        <TravelPreparationTable orders={travelOrders} />
-        <div className="flex gap-4 mt-4">
-          <button 
-            onClick={onSendToSAP}
-            disabled={travelOrders.length === 0}
-            className={`px-4 py-2 rounded ${
-              travelOrders.length === 0 
-                ? 'bg-gray-300 cursor-not-allowed' 
-                : 'bg-blue-500 text-white hover:bg-blue-600'
-            }`}
-          >
-            Enviar a SAP
-          </button>
-          <button 
-            onClick={onClearTravels}
-            disabled={travelOrders.length === 0}
-            className={`px-4 py-2 rounded ${
-              travelOrders.length === 0 
-                ? 'bg-gray-300 cursor-not-allowed' 
-                : 'bg-red-500 text-white hover:bg-red-600'
-            }`}
-          >
-            Limpiar viajes
-          </button>
+      {travelOrders.length > 0 && (
+        <div ref={travelTableRef} className="bg-white shadow-md rounded-lg p-4">
+          <h2 className="text-xl font-semibold mb-4">Preparación del Viaje</h2>
+          <TravelPreparationTable 
+            orders={travelOrders} 
+            sortConfig={sortConfig}
+            onSort={onSort}
+          />
+          <div className="flex gap-4 mt-4">
+            <button 
+              onClick={onSendToSAP}
+              className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
+            >
+              Enviar a SAP
+            </button>
+            <button 
+              onClick={onClearTravels}
+              className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+            >
+              Limpiar viajes
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
