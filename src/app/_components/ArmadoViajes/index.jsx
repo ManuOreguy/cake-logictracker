@@ -1,7 +1,8 @@
 "use client";
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { SAPOrdersTable } from "./SAPOrdersTable";
 import { TravelPreparationTable } from "./TravelPreparationTable";
+import { OrderFilters } from "./OrderFilters";
 
 export const ArmadoViajes = ({
   sapOrders,
@@ -17,6 +18,26 @@ export const ArmadoViajes = ({
   onSort
 }) => {
   const travelTableRef = useRef(null);
+  const [filters, setFilters] = useState({
+    terminal: '',
+    fechaEntrega: '',
+    tipoViaje: ''
+  });
+
+  const handleFilterChange = (filterName, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterName]: value
+    }));
+  };
+
+  const filteredOrders = sapOrders.filter(order => {
+    return (
+      (!filters.terminal || order.Terminal === filters.terminal) &&
+      (!filters.fechaEntrega || order.FechaEntrega === filters.fechaEntrega) &&
+      (!filters.tipoViaje || order.Tipo === filters.tipoViaje)
+    );
+  });
 
   useEffect(() => {
     if (travelOrders.length > 0 && travelTableRef.current) {
@@ -60,9 +81,15 @@ export const ArmadoViajes = ({
             Preparar Viaje
           </button>
         </div>
+
+        <OrderFilters 
+          orders={sapOrders}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+        />
         
         <SAPOrdersTable 
-          orders={sapOrders}
+          orders={filteredOrders}
           selectedOrders={selectedOrders}
           onToggleSelection={onToggleOrderSelection}
           sortConfig={sortConfig}

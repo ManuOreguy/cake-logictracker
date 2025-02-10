@@ -27,7 +27,7 @@ export const transformSAPOrders = (orders) => {
     const groupedOrders = {};
 
     orders.forEach((order) => {
-        const { DocNum, CardName, FechaEntrega, Terminal, ItemCode, OpenQty } = order;
+        const { DocNum, CardName, FechaEntrega, Terminal, ItemCode, OpenQty, Tipo } = order;
 
         if (!groupedOrders[DocNum]) {
             groupedOrders[DocNum] = {
@@ -35,6 +35,7 @@ export const transformSAPOrders = (orders) => {
                 CardName,
                 FechaEntrega,
                 Terminal,
+                Tipo: Tipo || 'CIF', // Valor por defecto si no viene
                 GO2: 0,
                 GO3: 0,
                 NS: 0,
