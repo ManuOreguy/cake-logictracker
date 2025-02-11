@@ -42,7 +42,7 @@ export const SAPOrdersTable = ({ orders, selectedOrders, onToggleSelection, sort
                                     type="checkbox"
                                     checked={selectedOrders.includes(order.DocNum)}
                                     onChange={() => onToggleSelection(order.DocNum)}
-                                    className="form-checkbox"
+                                    className="form-checkbox w-5 h-5"
                                 />
                             </td>
                             <td className="border-b border-gray-200 p-2">{order.DocNum}</td>
