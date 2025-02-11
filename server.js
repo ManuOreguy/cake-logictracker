@@ -10,6 +10,17 @@ app.use(cors());
 
 let sapSession = null;
 
+// Caché para almacenar los datos de SAP
+const sapCache = new Map();
+
+// Función para limpiar la caché después de cierto tiempo
+const clearCacheAfterDelay = (view) => {
+  setTimeout(() => {
+    sapCache.delete(view);
+    console.log(`🗑️ Caché limpiada para la vista: ${view}`);
+  }, 5 * 60 * 1000); // 5 minutos
+};
+
 // 📌 **Login SAP**
 app.post("/api/loginSAP", async (req, res) => {
   try {
@@ -46,15 +57,22 @@ app.post("/api/loginSAP", async (req, res) => {
   }
 });
 
-// 📌 **GET con paginación correcta**
+// 📌 **GET universal con caché**
 app.get("/api/orders/:view", async (req, res) => {
   try {
     const { view } = req.params;
+    const { refresh } = req.query; // Parámetro opcional para forzar recarga
     const baseUrl = `${process.env.SAP_SERVER}/b1s/v2/sml.svc/`;
     let url = `${baseUrl}${view}`;
 
     if (!sapSession) {
       throw new Error("No hay sesión de SAP activa. Inicia sesión primero.");
+    }
+
+    // Verificar si los datos están en caché y no se solicita refresh
+    if (!refresh && sapCache.has(view)) {
+      console.log(`📦 Retornando datos desde caché para: ${view}`);
+      return res.json(sapCache.get(view));
     }
 
     let allData = [];
@@ -87,6 +105,11 @@ app.get("/api/orders/:view", async (req, res) => {
 
     await fetchData(url);
     console.log(`📌 Total de registros obtenidos: ${allData.length}`);
+
+    // Guardar en caché
+    sapCache.set(view, allData);
+    clearCacheAfterDelay(view);
+
     res.json(allData);
   } catch (error) {
     console.error("❌ Error obteniendo órdenes:", error);
