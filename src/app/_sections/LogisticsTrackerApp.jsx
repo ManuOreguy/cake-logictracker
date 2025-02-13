@@ -31,10 +31,14 @@ export const LogisticsTrackerApp = () => {
   const [tripCounter, setTripCounter] = useState(1);
   const [expandedTripIds, setExpandedTripIds] = useState([]);
 
-  const handleFetchOpenOrders = async () => {
+  const handleFetchOpenOrders = async (preloadedData) => {
     try {
-      const data = await getOrdersSAP('DP_PEDIDOS_ABIERTOS');
-      setSapOrders(data);
+      if (preloadedData) {
+        setSapOrders(preloadedData);
+      } else {
+        const data = await getOrdersSAP('DP_PEDIDOS_ABIERTOS');
+        setSapOrders(data);
+      }
       setSelectedOrders([]);
     } catch (error) {
       console.error('Error al obtener órdenes:', error);

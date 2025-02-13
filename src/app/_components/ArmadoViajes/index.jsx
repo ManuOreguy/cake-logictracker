@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { SAPOrdersTable } from "./SAPOrdersTable";
 import { TravelPreparationTable } from "./TravelPreparationTable";
 import { OrderFilters } from "./OrderFilters";
+import { getOrdersSAP } from "@/src/utils/getOrdersSAP";
 
 export const ArmadoViajes = ({
   sapOrders,
@@ -18,11 +19,33 @@ export const ArmadoViajes = ({
   onSort
 }) => {
   const travelTableRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [preloadedOrders, setPreloadedOrders] = useState([]);
   const [filters, setFilters] = useState({
     terminal: '',
     fechaEntrega: '',
     tipoViaje: ''
   });
+
+  // Precargar datos al montar el componente
+  useEffect(() => {
+    const preloadData = async () => {
+      try {
+        const data = await getOrdersSAP('DP_PEDIDOS_ABIERTOS', { setLoading: setIsLoading });
+        setPreloadedOrders(data);
+      } catch (error) {
+        console.error('Error al precargar datos:', error);
+      }
+    };
+    preloadData();
+  }, []);
+
+  // Función modificada para usar datos precargados
+  const handleFetchOpenOrders = () => {
+    if (preloadedOrders.length > 0) {
+      onFetchOpenOrders(preloadedOrders);
+    }
+  };
 
   const handleFilterChange = (filterName, value) => {
     setFilters(prev => ({
@@ -63,10 +86,21 @@ export const ArmadoViajes = ({
         <h2 className="text-xl font-semibold mb-4">Pedidos SAP</h2>
         <div className="flex justify-between mb-4">
           <button 
-            onClick={onFetchOpenOrders}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            onClick={handleFetchOpenOrders}
+            disabled={isLoading}
+            className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ${
+              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Traer pedidos abiertos
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Cargando...
+              </span>
+            ) : 'Traer pedidos abiertos'}
           </button>
           
           <button 
@@ -94,6 +128,7 @@ export const ArmadoViajes = ({
           onToggleSelection={onToggleOrderSelection}
           sortConfig={sortConfig}
           onSort={onSort}
+          isLoading={isLoading}
         />
       </div>
 
