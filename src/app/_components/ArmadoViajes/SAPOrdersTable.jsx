@@ -7,29 +7,29 @@ export const SAPOrdersTable = ({ orders, selectedOrders, onToggleSelection, sort
             <table className="w-full border-collapse">
                 <thead className="sticky top-0 bg-gray-100">
                     <tr>
-                        <th className="border-b border-gray-200 p-2">Select</th>
-                        <th className="border-b border-gray-200 p-2 cursor-pointer" onClick={() => onSort("DocNum")}>
+                        <th className="border-b border-gray-200 p-2 text-left">Select</th>
+                        <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("DocNum")}>
                             Número de Pedido {sortConfig.key === "DocNum" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
                         </th>
-                        <th className="border-b border-gray-200 p-2 cursor-pointer" onClick={() => onSort("CardName")}>
+                        <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("CardName")}>
                             Cliente {sortConfig.key === "CardName" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
                         </th>
-                        <th className="border-b border-gray-200 p-2 cursor-pointer" onClick={() => onSort("FechaEntrega")}>
+                        <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("FechaEntrega")}>
                             Fecha de Entrega {sortConfig.key === "FechaEntrega" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
                         </th>
-                        <th className="border-b border-gray-200 p-2 cursor-pointer" onClick={() => onSort("Terminal")}>
+                        <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("Terminal")}>
                             Terminal {sortConfig.key === "Terminal" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
                         </th>
-                        <th className="border-b border-gray-200 p-2 cursor-pointer" onClick={() => onSort("GO2")}>
+                        <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("GO2")}>
                             GO2 {sortConfig.key === "GO2" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
                         </th>
-                        <th className="border-b border-gray-200 p-2 cursor-pointer" onClick={() => onSort("GO3")}>
+                        <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("GO3")}>
                             GO3 {sortConfig.key === "GO3" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
                         </th>
-                        <th className="border-b border-gray-200 p-2 cursor-pointer" onClick={() => onSort("NS")}>
+                        <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("NS")}>
                             NS {sortConfig.key === "NS" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
                         </th>
-                        <th className="border-b border-gray-200 p-2 cursor-pointer" onClick={() => onSort("NP")}>
+                        <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("NP")}>
                             NP {sortConfig.key === "NP" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
                         </th>
                     </tr>

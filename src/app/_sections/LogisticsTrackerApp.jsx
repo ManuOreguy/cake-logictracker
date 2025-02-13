@@ -7,6 +7,7 @@ import { HistoricoViajes } from "../_components/HistoricoViajes";
 import { COT } from "../_components/COT";
 import { sortOrders } from "@/src/utils/orderUtils";
 import { getOrdersSAP } from "@/src/utils/getOrdersSAP";
+import { postDeliveryNotesSAP } from "@/src/utils/postDeliveryNotesSAP";
 import { TravelPreparationTable } from "../_components/ArmadoViajes/TravelPreparationTable";
 
 export const LogisticsTrackerApp = () => {
@@ -30,6 +31,10 @@ export const LogisticsTrackerApp = () => {
   const [historicTravels, setHistoricTravels] = useState([]);
   const [tripCounter, setTripCounter] = useState(1);
   const [expandedTripIds, setExpandedTripIds] = useState([]);
+
+  // Nuevo estado para manejar el envío a SAP
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState(null);
 
   const handleFetchOpenOrders = async (preloadedData) => {
     try {
@@ -56,23 +61,37 @@ export const LogisticsTrackerApp = () => {
     setSelectedOrders([]);
   };
 
-  const handleSendToSAP = () => {
-    setShowSAPConfirmation(true);
+  const handleSendToSAP = async () => {
+    try {
+      setIsSending(true);
+      setSendError(null);
 
-    const newTrip = {
-      tripNumber: tripCounter,
-      sentDate: new Date().toISOString().split("T")[0],
-      totalAmount: travelOrders.reduce((sum, order) => sum + order.DocTotal, 0),
-      orders: travelOrders,
-      status: "Active",
-    };
+      // Enviar remitos a SAP usando la nueva función
+      await postDeliveryNotesSAP(travelOrders);
 
-    setTimeout(() => {
+      // Si el envío fue exitoso, crear el nuevo viaje
+      const newTrip = {
+        tripNumber: tripCounter,
+        sentDate: new Date().toISOString().split("T")[0],
+        totalAmount: travelOrders.reduce((sum, order) => sum + order.DocTotal, 0),
+        orders: travelOrders,
+        status: "Active",
+      };
+
       setHistoricTravels((prev) => [...prev, newTrip]);
       setTripCounter((prev) => prev + 1);
       setTravelOrders([]);
-      setShowSAPConfirmation(false);
-    }, 3000);
+      setShowSAPConfirmation(true);
+
+      setTimeout(() => {
+        setShowSAPConfirmation(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Error al enviar a SAP:', error);
+      setSendError(error.message);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleClearTravels = () => {

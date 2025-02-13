@@ -116,4 +116,50 @@ app.get("/api/sap/:view", async (req, res) => {
   }
 });
 
+// 📌 **POST Universal para enviar datos a SAP**
+app.post("/api/sap/:endpoint", async (req, res) => {
+  try {
+    const { endpoint } = req.params;
+    const payload = req.body;
+    const baseUrl = `${process.env.SAP_SERVER}/b1s/v2/`;
+    const url = `${baseUrl}${endpoint}`;
+
+    if (!sapSession) {
+      throw new Error("No hay sesión de SAP activa. Inicia sesión primero.");
+    }
+
+    // Validar que payload tiene la estructura correcta
+    if (!payload || typeof payload !== "object") {
+      throw new Error("El payload enviado no es válido.");
+    }
+
+    console.log("📌 Recibí un POST a:", endpoint);
+    console.log("📌 URL de SAP:", url);
+    console.log("📌 Payload enviado:", JSON.stringify(payload, null, 2));
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Cookie": sapSession
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("🚨 Error en la respuesta de SAP:", errorText);
+      throw new Error(`Error enviando datos a SAP: ${errorText}`);
+    }
+
+    const responseData = await response.json();
+    console.log("📌 Respuesta de SAP:", responseData);
+    
+    res.json(responseData);
+  } catch (error) {
+    console.error(`❌ Error en POST a ${req.params.endpoint}:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(5000, () => console.log("🚀 Servidor backend corriendo en http://localhost:5000"));
