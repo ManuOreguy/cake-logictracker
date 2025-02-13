@@ -2,26 +2,15 @@
 import { loginSAP } from "./loginSAP";
 import { transformSAPOrders } from "./orderUtils";
 
-// Caché del lado del cliente
-const clientCache = new Map();
+export const getOrdersSAP = async (view) => {
+    const session = await loginSAP();
+    const baseUrl = "http://localhost:5000/api/orders/";
+    let url = `${baseUrl}${view}`;
+    let allData = [];
 
-export const getOrdersSAP = async (view, options = {}) => {
-    const { setLoading, forceRefresh = false } = options;
-
-    try {
-        if (setLoading) setLoading(true);
-
-        // Verificar caché del cliente
-        if (!forceRefresh && clientCache.has(view)) {
-            console.log(`📦 Usando datos en caché para: ${view}`);
-            return clientCache.get(view);
-        }
-
-        const session = await loginSAP();
-        const baseUrl = "http://localhost:5000/api/orders/";
-        let url = `${baseUrl}${view}${forceRefresh ? '?refresh=true' : ''}`;
-
+    const fetchData = async (url) => {
         console.log("📌 Solicitando datos a:", url);
+
         const response = await fetch(url, {
             method: "GET",
             headers: { 
@@ -35,26 +24,36 @@ export const getOrdersSAP = async (view, options = {}) => {
             throw new Error(`Error obteniendo datos: ${errorText}`);
         }
 
-        const data = await response.json();
-        const transformedData = transformSAPOrders(data);
+        const responseData = await response.json();
+        const dataToAdd = responseData.value || responseData;
 
-        // Guardar en caché del cliente
-        clientCache.set(view, transformedData);
-        clearClientCacheAfterDelay(view);
+        if (Array.isArray(dataToAdd)) {
+            allData = allData.concat(dataToAdd);
+        }
 
+        // 📌 **Corrección de paginación: Construcción correcta de URL**
+        if (responseData["@odata.nextLink"]) {
+            const nextPagePath = responseData["@odata.nextLink"]; // "DP_PEDIDOS_ABIERTOS?$skip=20"
+            const nextUrl = `http://localhost:5000/api/orders/${nextPagePath}`; 
+
+            if (nextUrl !== url) {
+                console.log("📌 Cargando siguiente página:", nextUrl);
+                await fetchData(nextUrl);
+            } else {
+                console.warn("⚠️ Deteniendo loop: @odata.nextLink es igual a la URL actual.");
+            }
+        }
+    };
+
+    try {
+        await fetchData(url);
+        console.log(`📌 Total de registros obtenidos: ${allData.length}`);
+
+        // 📌 **Transformar y devolver los datos**
+        const transformedData = transformSAPOrders(allData);
         return transformedData;
     } catch (error) {
         console.error("❌ Error en getOrdersSAP:", error);
         throw error;
-    } finally {
-        if (setLoading) setLoading(false);
     }
-};
-
-// Limpiar caché del cliente después de cierto tiempo
-const clearClientCacheAfterDelay = (view) => {
-    setTimeout(() => {
-        clientCache.delete(view);
-        console.log(`🗑️ Caché del cliente limpiada para: ${view}`);
-    }, 5 * 60 * 1000); // 5 minutos
 };
