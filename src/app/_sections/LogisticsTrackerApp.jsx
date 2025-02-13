@@ -1,6 +1,6 @@
 "use client";
 import { SECTIONS, SUBSECTIONS } from "@/src/constants";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Sidebar } from "../_components/Sidebar";
 import { ArmadoViajes } from "../_components/ArmadoViajes";
 import { HistoricoViajes } from "../_components/HistoricoViajes";
@@ -16,12 +16,8 @@ export const LogisticsTrackerApp = () => {
     SUBSECTIONS.ARMADO_VIAJES
   );
 
-  // Loading state
-  const [isLoading, setIsLoading] = useState(false);
-
   // Orders state
   const [sapOrders, setSapOrders] = useState([]);
-  const [remitosData, setRemitosData] = useState([]);
   const [travelOrders, setTravelOrders] = useState([]);
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [showSAPConfirmation, setShowSAPConfirmation] = useState(false);
@@ -35,31 +31,9 @@ export const LogisticsTrackerApp = () => {
   const [tripCounter, setTripCounter] = useState(1);
   const [expandedTripIds, setExpandedTripIds] = useState([]);
 
-  // Cargar remitos cuando se navega a COT
-  useEffect(() => {
-    if (currentSection === SECTIONS.COT) {
-      handleFetchRemitos();
-    }
-  }, [currentSection]);
-
-  const handleFetchRemitos = async () => {
-    try {
-      const data = await getOrdersSAP('DP_REMITOS_ABIERTOS_SOBR', {
-        setLoading: setIsLoading,
-        forceRefresh: false
-      });
-      setRemitosData(data);
-    } catch (error) {
-      console.error('Error al obtener remitos:', error);
-    }
-  };
-
   const handleFetchOpenOrders = async () => {
     try {
-      const data = await getOrdersSAP('DP_PEDIDOS_ABIERTOS', {
-        setLoading: setIsLoading,
-        forceRefresh: false
-      });
+      const data = await getOrdersSAP('DP_PEDIDOS_ABIERTOS');
       setSapOrders(data);
       setSelectedOrders([]);
     } catch (error) {
@@ -146,48 +120,37 @@ export const LogisticsTrackerApp = () => {
       />
 
       <div className="flex-1 p-4 overflow-y-auto">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        ) : (
-          currentSection === SECTIONS.LOGICTRACKER ? (
-            currentSubsection === SUBSECTIONS.ARMADO_VIAJES ? (
-              <ArmadoViajes
-                sapOrders={sortOrders(sapOrders, sortConfig)}
-                selectedOrders={selectedOrders}
-                travelOrders={travelOrders}
-                showSAPConfirmation={showSAPConfirmation}
-                sortConfig={sortConfig}
-                onFetchOpenOrders={handleFetchOpenOrders}
-                onPrepareTravel={handlePrepareTravel}
-                onSendToSAP={handleSendToSAP}
-                onClearTravels={handleClearTravels}
-                onToggleOrderSelection={toggleOrderSelection}
-                onSort={handleSort}
-              >
-                <TravelPreparationTable 
-                  orders={sortOrders(travelOrders, sortConfig)} 
-                  sortConfig={sortConfig}
-                  onSort={handleSort}
-                />
-              </ArmadoViajes>
-            ) : (
-              <HistoricoViajes
-                trips={historicTravels}
-                expandedTripIds={expandedTripIds}
-                onToggleExpansion={toggleTripExpansion}
-                onCancelTrip={handleTripCancellation}
-              />
-            )
-          ) : (
-            <COT 
-              remitosData={remitosData}
-              isLoading={isLoading}
+        {currentSection === SECTIONS.LOGICTRACKER ? (
+          currentSubsection === SUBSECTIONS.ARMADO_VIAJES ? (
+            <ArmadoViajes
+              sapOrders={sortOrders(sapOrders, sortConfig)}
+              selectedOrders={selectedOrders}
+              travelOrders={travelOrders}
+              showSAPConfirmation={showSAPConfirmation}
               sortConfig={sortConfig}
+              onFetchOpenOrders={handleFetchOpenOrders}
+              onPrepareTravel={handlePrepareTravel}
+              onSendToSAP={handleSendToSAP}
+              onClearTravels={handleClearTravels}
+              onToggleOrderSelection={toggleOrderSelection}
               onSort={handleSort}
+            >
+              <TravelPreparationTable 
+                orders={sortOrders(travelOrders, sortConfig)} 
+                sortConfig={sortConfig}
+                onSort={handleSort}
+              />
+            </ArmadoViajes>
+          ) : (
+            <HistoricoViajes
+              trips={historicTravels}
+              expandedTripIds={expandedTripIds}
+              onToggleExpansion={toggleTripExpansion}
+              onCancelTrip={handleTripCancellation}
             />
           )
+        ) : (
+          <COT />
         )}
       </div>
     </div>
