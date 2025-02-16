@@ -17,6 +17,7 @@ export const sortOrders = (items, config) => {
 };
 
 export const transformSAPOrders = (orders) => {
+    console.log("📌 Datos originales de orders:", orders);
     const productMapping = {
         C001: "GO2",
         C003: "GO3",
@@ -27,11 +28,12 @@ export const transformSAPOrders = (orders) => {
     const groupedOrders = {};
 
     orders.forEach((order) => {
-        const { DocNum, CardName, FechaEntrega, Terminal, ItemCode, OpenQty, Tipo } = order;
+        const { DocNum, CardCode, CardName, FechaEntrega, Terminal, ItemCode, OpenQty, Tipo } = order;
 
         if (!groupedOrders[DocNum]) {
             groupedOrders[DocNum] = {
                 DocNum,
+                CardCode,
                 CardName,
                 FechaEntrega,
                 Terminal,
