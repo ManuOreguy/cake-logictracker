@@ -17,7 +17,6 @@ export const sortOrders = (items, config) => {
 };
 
 export const transformSAPOrders = (orders) => {
-    console.log("📌 Datos originales de orders:", orders);
     const productMapping = {
         C001: "GO2",
         C003: "GO3",
@@ -52,4 +51,11 @@ export const transformSAPOrders = (orders) => {
     });
 
     return Object.values(groupedOrders);
+};
+
+export const formatFecha = (fechaISO) => {
+    if (!fechaISO) return '';
+    
+    const [year, month, day] = fechaISO.split('-'); // Divide la fecha "YYYY-MM-DD"
+    return `${day}-${month}-${year}`; // Devuelve "DD-MM-YYYY"
 };

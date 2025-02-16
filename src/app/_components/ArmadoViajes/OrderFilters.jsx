@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import { formatFecha } from "@/src/utils/orderUtils";
 
 export const OrderFilters = ({ orders, filters, onFilterChange }) => {
   // Obtener valores únicos para los filtros
@@ -33,14 +34,15 @@ export const OrderFilters = ({ orders, filters, onFilterChange }) => {
         </label>
         <select
           value={filters.fechaEntrega || ''}
-          onChange={(e) => onFilterChange('fechaEntrega', e.target.value)}
+          onChange={(e) => 
+            onFilterChange('fechaEntrega', e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="">Todas las fechas</option>
           {uniqueDates.map((fecha) => (
             <option key={fecha} value={fecha}>
-              {new Date(fecha).toLocaleDateString('es-AR')}
-            </option>
+             {formatFecha(fecha)}
+  </option> 
           ))}
         </select>
       </div>

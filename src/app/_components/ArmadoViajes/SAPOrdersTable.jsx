@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { formatFecha } from "@/src/utils/orderUtils";
 
 export const SAPOrdersTable = ({ orders, selectedOrders, onToggleSelection, sortConfig, onSort }) => {
     return (
@@ -47,7 +48,7 @@ export const SAPOrdersTable = ({ orders, selectedOrders, onToggleSelection, sort
                             </td>
                             <td className="border-b border-gray-200 p-2">{order.DocNum}</td>
                             <td className="border-b border-gray-200 p-2">{order.CardName}</td>
-                            <td className="border-b border-gray-200 p-2">{order.FechaEntrega}</td>
+                            <td className="border-b border-gray-200 p-2">{formatFecha(order.FechaEntrega)}</td>
                             <td className="border-b border-gray-200 p-2">{order.Terminal}</td>
                             <td className="border-b border-gray-200 p-2">{order.GO2}</td>
                             <td className="border-b border-gray-200 p-2">{order.GO3}</td>
