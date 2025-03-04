@@ -27,8 +27,8 @@ export const postDeliveryNotesSAP = async (orders) => {
                     acc[key].DocumentLines.push({
                         ItemCode: product.code,
                         Quantity: product.quantity * 1000, // Convertir de m³ a litros
-                        BaseEntry: order.DocNum,
-                        BaseLine: index
+                        //BaseEntry: order.DocNum,
+                        //BaseLine: index
                     });
                 }
             });

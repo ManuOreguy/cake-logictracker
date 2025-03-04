@@ -12,6 +12,9 @@ export const SAPOrdersTable = ({ orders, selectedOrders, onToggleSelection, sort
                         <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("DocNum")}>
                             Número de Pedido {sortConfig.key === "DocNum" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
                         </th>
+                        <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("Estado")}>
+                            Estado {sortConfig.key === "Estado" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
+                        </th>
                         <th className="border-b border-gray-200 p-2 text-left cursor-pointer" onClick={() => onSort("CardName")}>
                             Cliente {sortConfig.key === "CardName" ? (sortConfig.direction === "ascending" ? "↑" : "↓") : ""}
                         </th>
@@ -47,6 +50,7 @@ export const SAPOrdersTable = ({ orders, selectedOrders, onToggleSelection, sort
                                 />
                             </td>
                             <td className="border-b border-gray-200 p-2">{order.DocNum}</td>
+                            <td className="border-b border-gray-200 p-2">{order.Estado}</td>
                             <td className="border-b border-gray-200 p-2">{order.CardName}</td>
                             <td className="border-b border-gray-200 p-2">{formatFecha(order.FechaEntrega)}</td>
                             <td className="border-b border-gray-200 p-2">{order.Terminal}</td>
