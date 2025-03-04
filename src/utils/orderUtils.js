@@ -27,7 +27,7 @@ export const transformSAPOrders = (orders) => {
     const groupedOrders = {};
 
     orders.forEach((order) => {
-        const { DocNum, Estado, CardCode, CardName, FechaEntrega, Terminal, ItemCode, OpenQty, Tipo } = order;
+        const { DocNum, Estado, CardCode, CardName, FechaEntrega, ShipToCode, Terminal, ItemCode, Price, OpenQty, Tipo } = order;
 
         if (!groupedOrders[DocNum]) {
             groupedOrders[DocNum] = {
@@ -36,7 +36,9 @@ export const transformSAPOrders = (orders) => {
                 CardCode,
                 CardName,
                 FechaEntrega,
+                ShipToCode,
                 Terminal,
+                Price,
                 Tipo: Tipo || 'CIF', // Valor por defecto si no viene
                 GO2: 0,
                 GO3: 0,
@@ -77,10 +79,10 @@ export const sendOrdersToSAP = async (orders) => {
             
             // Agregar líneas de productos
             const products = [
-                { code: 'C001', quantity: order.GO2 },
-                { code: 'C003', quantity: order.GO3 },
-                { code: 'C004', quantity: order.NS },
-                { code: 'C005', quantity: order.NP }
+                { code: 'C001', quantity: order.GO2, price: order.Price },
+                { code: 'C003', quantity: order.GO3, price: order.Price },
+                { code: 'C004', quantity: order.NS, price: order.Price },
+                { code: 'C005', quantity: order.NP, price: order.Price }
             ];
 
             products.forEach((product, index) => {
@@ -88,6 +90,7 @@ export const sendOrdersToSAP = async (orders) => {
                     acc[key].DocumentLines.push({
                         ItemCode: product.code,
                         Quantity: product.quantity * 1000, // Convertir de m3 a litros
+                        UnitPrice: product.price
                         //BaseEntry: order.DocNum,
                         //BaseLine: index
                     });

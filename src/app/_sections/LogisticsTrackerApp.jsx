@@ -41,7 +41,7 @@ export const LogisticsTrackerApp = () => {
       if (preloadedData) {
         setSapOrders(preloadedData);
       } else {
-        const data = await getOrdersSAP('DP_PEDIDOS_ABIERTOS');
+        const data = await getOrdersSAP('DP_OPERACIONES_PEDIDOS_ABIERTOS');
         setSapOrders(data);
       }
       setSelectedOrders([]);

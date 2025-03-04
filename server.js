@@ -20,60 +20,16 @@ const clearCacheAfterDelay = (key, delay = 1800000) => { // 30 minutos por defec
   }, delay);
 };
 
-// 📌 **Login SAP**
-app.post("/api/loginSAP", async (req, res) => {
+// Función para cargar datos de una vista SAP
+const loadSAPView = async (view) => {
   try {
-    const url = `${process.env.SAP_SERVER}/b1s/v2/Login`;
-    const payload = JSON.stringify({
-      CompanyDB: process.env.SAP_DATABASE,
-      UserName: process.env.SAP_USER,
-      Password: process.env.SAP_PASSWORD
-    });
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: payload
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Error en login SAP: ${errorData.error?.message || response.statusText}`);
+    if (!sapSession) {
+      console.log('📌 No hay sesión activa. Iniciando sesión en SAP...');
+      await loginToSAP();
     }
 
-    const cookies = response.headers.raw()['set-cookie'];
-    sapSession = cookies ? cookies.map(cookie => cookie.split(';')[0]).join('; ') : null;
-
-    console.log("📌 Sesión guardada en backend:", sapSession);
-
-    res.json({ success: true, session: sapSession });
-  } catch (error) {
-    console.error("❌ Error en login SAP:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 📌 **GET Universal para vistas SAP**
-app.get("/api/sap/:view", async (req, res) => {
-  try {
-    const { view } = req.params;
-    const { refresh } = req.query; // Parámetro opcional para forzar actualización
     const baseUrl = `${process.env.SAP_SERVER}/b1s/v2/sml.svc/`;
     let url = `${baseUrl}${view}`;
-
-    // Verificar si los datos están en caché y no se solicita actualización
-    if (!refresh && sapCache.has(view)) {
-      console.log(`📌 Retornando datos en caché para: ${view}`);
-      return res.json(sapCache.get(view));
-    }
-
-    if (!sapSession) {
-      throw new Error("No hay sesión de SAP activa. Inicia sesión primero.");
-    }
-
     let allData = [];
 
     const fetchData = async (url) => {
@@ -109,7 +65,73 @@ app.get("/api/sap/:view", async (req, res) => {
     sapCache.set(view, allData);
     clearCacheAfterDelay(view);
     
-    res.json(allData);
+    return allData;
+  } catch (error) {
+    console.error(`❌ Error cargando vista ${view}:`, error);
+    throw error;
+  }
+};
+
+// Función para iniciar sesión en SAP
+const loginToSAP = async () => {
+  try {
+    const url = `${process.env.SAP_SERVER}/b1s/v2/Login`;
+    const payload = {
+      CompanyDB: process.env.SAP_DATABASE,
+      UserName: process.env.SAP_USER,
+      Password: process.env.SAP_PASSWORD
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Error en login SAP: ${errorData.error?.message || response.statusText}`);
+    }
+
+    const cookies = response.headers.raw()['set-cookie'];
+    sapSession = cookies ? cookies.map(cookie => cookie.split(';')[0]).join('; ') : null;
+
+    console.log("📌 Sesión SAP iniciada correctamente");
+    return sapSession;
+  } catch (error) {
+    console.error("❌ Error en login SAP:", error);
+    throw error;
+  }
+};
+
+// 📌 **Login SAP**
+app.post("/api/loginSAP", async (req, res) => {
+  try {
+    const session = await loginToSAP();
+    res.json({ success: true, session });
+  } catch (error) {
+    console.error("❌ Error en login SAP:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 📌 **GET Universal para vistas SAP**
+app.get("/api/sap/:view", async (req, res) => {
+  try {
+    const { view } = req.params;
+    const { refresh } = req.query;
+
+    // Verificar si los datos están en caché y no se solicita actualización
+    if (!refresh && sapCache.has(view)) {
+      console.log(`📌 Retornando datos en caché para: ${view}`);
+      return res.json(sapCache.get(view));
+    }
+
+    const data = await loadSAPView(view);
+    res.json(data);
   } catch (error) {
     console.error(`❌ Error obteniendo datos de ${req.params.view}:`, error);
     res.status(500).json({ error: error.message });
@@ -128,14 +150,8 @@ app.post("/api/sap/:endpoint", async (req, res) => {
       throw new Error("No hay sesión de SAP activa. Inicia sesión primero.");
     }
 
-    // Validar que payload tiene la estructura correcta
-    if (!payload || typeof payload !== "object") {
-      throw new Error("El payload enviado no es válido.");
-    }
-
-    console.log("📌 Recibí un POST a:", endpoint);
-    console.log("📌 URL de SAP:", url);
-    console.log("📌 Payload enviado:", JSON.stringify(payload, null, 2));
+    console.log("📌 Enviando datos a SAP:", url);
+    console.log("📌 Payload:", JSON.stringify(payload, null, 2));
 
     const response = await fetch(url, {
       method: "POST",
@@ -148,7 +164,6 @@ app.post("/api/sap/:endpoint", async (req, res) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("🚨 Error en la respuesta de SAP:", errorText);
       throw new Error(`Error enviando datos a SAP: ${errorText}`);
     }
 
@@ -162,4 +177,25 @@ app.post("/api/sap/:endpoint", async (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log("🚀 Servidor backend corriendo en http://localhost:5000"));
+// Cargar datos iniciales al arrancar el servidor
+const initializeServer = async () => {
+  try {
+    console.log('🚀 Iniciando servidor...');
+    
+    // Iniciar sesión en SAP
+    await loginToSAP();
+    
+    // Cargar datos de operaciones
+    console.log('📌 Cargando datos iniciales de operaciones...');
+    await loadSAPView('DP_OPERACIONES_DIRECCIONES');
+    
+    console.log('✅ Datos iniciales cargados correctamente');
+  } catch (error) {
+    console.error('❌ Error durante la inicialización del servidor:', error);
+  }
+};
+
+// Iniciar el servidor y cargar datos
+initializeServer().then(() => {
+  app.listen(5000, () => console.log("🚀 Servidor backend corriendo en http://localhost:5000"));
+});

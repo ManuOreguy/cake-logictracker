@@ -33,7 +33,7 @@ export const ArmadoViajes = ({
   useEffect(() => {
     const preloadData = async () => {
       try {
-        const data = await getOrdersSAP('DP_PEDIDOS_ABIERTOS', { setLoading: setIsLoading });
+        const data = await getOrdersSAP('DP_OPERACIONES_PEDIDOS_ABIERTOS', { setLoading: setIsLoading });
         setPreloadedOrders(data);
       } catch (error) {
         console.error('Error al precargar datos:', error);
