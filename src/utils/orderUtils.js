@@ -27,14 +27,20 @@ export const transformSAPOrders = (orders) => {
     const groupedOrders = {};
 
     orders.forEach((order) => {
-        const { DocNum, CardName, FechaEntrega, Terminal, ItemCode, OpenQty, Tipo } = order;
+        const { DocEntry, DocNum, Estado, CardCode, CardName, FechaEntrega, ShipToCode, Terminal, LineNum, ItemCode, Price, OpenQty, Tipo } = order;
 
         if (!groupedOrders[DocNum]) {
             groupedOrders[DocNum] = {
+                DocEntry,
                 DocNum,
+                Estado,
+                CardCode,
                 CardName,
                 FechaEntrega,
+                ShipToCode,
                 Terminal,
+                LineNum,
+                Price,
                 Tipo: Tipo || 'CIF', // Valor por defecto si no viene
                 GO2: 0,
                 GO3: 0,
@@ -50,4 +56,11 @@ export const transformSAPOrders = (orders) => {
     });
 
     return Object.values(groupedOrders);
+};
+
+export const formatFecha = (fechaISO) => {
+    if (!fechaISO) return '';
+    
+    const [year, month, day] = fechaISO.split('-'); // Divide la fecha "YYYY-MM-DD"
+    return `${day}-${month}-${year}`; // Devuelve "DD-MM-YYYY"
 };
