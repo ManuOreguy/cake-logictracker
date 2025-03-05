@@ -23,6 +23,7 @@ export const ArmadoViajes = ({
   const travelTableRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [preloadedOrders, setPreloadedOrders] = useState([]);
+  const [isFirstClick, setIsFirstClick] = useState(true);
   const [filters, setFilters] = useState({
     terminal: '',
     fechaEntrega: '',
@@ -42,10 +43,26 @@ export const ArmadoViajes = ({
     preloadData();
   }, []);
 
-  // Función modificada para usar datos precargados
-  const handleFetchOpenOrders = () => {
-    if (preloadedOrders.length > 0) {
+  // Función modificada para usar datos precargados solo la primera vez
+  const handleFetchOpenOrders = async () => {
+    if (isFirstClick && preloadedOrders.length > 0) {
+      // Primera vez: usar datos precargados
       onFetchOpenOrders(preloadedOrders);
+      setIsFirstClick(false);
+    } else {
+      // Siguientes veces: obtener datos frescos
+      try {
+        setIsLoading(true);
+        const freshData = await getOrdersSAP('DP_OPERACIONES_PEDIDOS_ABIERTOS', { 
+          forceRefresh: true,
+          setLoading: setIsLoading 
+        });
+        onFetchOpenOrders(freshData);
+      } catch (error) {
+        console.error('Error al obtener pedidos abiertos:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -111,7 +128,7 @@ export const ArmadoViajes = ({
                 </svg>
                 Cargando...
               </span>
-            ) : 'Traer pedidos abiertos'}
+            ) : isFirstClick ? 'Traer pedidos abiertos' : 'Actualizar pedidos'}
           </button>
           
           <button 

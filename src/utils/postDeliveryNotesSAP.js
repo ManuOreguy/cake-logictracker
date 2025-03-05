@@ -15,13 +15,13 @@ export const postDeliveryNotesSAP = async (orders) => {
         }
 
         // Obtener todas las operaciones una sola vez
-        console.log('📌 Obteniendo datos de operaciones...');
+        console.log('📌 Obteniendo datos de direcciones...');
         const operacionesResponse = await fetch('http://localhost:5000/api/sap/DP_OPERACIONES_DIRECCIONES');
         if (!operacionesResponse.ok) {
-            throw new Error(`Error obteniendo operaciones: ${await operacionesResponse.text()}`);
+            throw new Error(`Error obteniendo datos de direcciones: ${await operacionesResponse.text()}`);
         }
         const operaciones = await operacionesResponse.json();
-        console.log(`📌 Se obtuvieron ${operaciones.length} operaciones`);
+        console.log(`📌 Se obtuvieron ${operaciones.length} datos de direcciones`);
 
         // Agrupar órdenes por cliente y fecha de entrega
         const groupedOrders = orders.reduce((acc, order) => {
@@ -39,18 +39,21 @@ export const postDeliveryNotesSAP = async (orders) => {
 
             // Agregar líneas de productos
             const products = [
-                { code: 'C001', quantity: order.GO2, price: order.Price },
-                { code: 'C003', quantity: order.GO3, price: order.Price },
-                { code: 'C004', quantity: order.NS, price: order.Price },
-                { code: 'C005', quantity: order.NP, price: order.Price }
+                { code: 'C001', quantity: order.GO2, /*price: order.Price,*/ baseentry: order.DocEntry, baseline: order.LineNum },
+                { code: 'C003', quantity: order.GO3, /*price: order.Price,*/ baseentry: order.DocEntry, baseline: order.LineNum },
+                { code: 'C004', quantity: order.NS, /*price: order.Price,*/ baseentry: order.DocEntry, baseline: order.LineNum },
+                { code: 'C005', quantity: order.NP, /*price: order.Price,*/ baseentry: order.DocEntry, baseline: order.LineNum }
             ];
-
+            
             products.forEach(product => {
                 if (product.quantity > 0) {
                     acc[key].DocumentLines.push({
                         ItemCode: product.code,
                         Quantity: product.quantity * 1000, // Convertir de m³ a litros
-                        UnitPrice: product.price // Cambiado de Price a UnitPrice
+                        //UnitPrice: product.price,
+                        BaseEntry: product.baseentry,
+                        BaseLine: product.baseline,
+                        BaseType: 17
                     });
                 }
             });

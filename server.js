@@ -53,7 +53,7 @@ const loadSAPView = async (view) => {
 
       if (data["@odata.nextLink"]) {
         const nextPageUrl = `${baseUrl}${data["@odata.nextLink"]}`;
-        console.log("📌 Cargando siguiente página:", nextPageUrl);
+        //console.log("📌 Cargando siguiente página:", nextPageUrl);
         await fetchData(nextPageUrl);
       }
     };

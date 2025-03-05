@@ -27,10 +27,11 @@ export const transformSAPOrders = (orders) => {
     const groupedOrders = {};
 
     orders.forEach((order) => {
-        const { DocNum, Estado, CardCode, CardName, FechaEntrega, ShipToCode, Terminal, ItemCode, Price, OpenQty, Tipo } = order;
+        const { DocEntry, DocNum, Estado, CardCode, CardName, FechaEntrega, ShipToCode, Terminal, LineNum, ItemCode, Price, OpenQty, Tipo } = order;
 
         if (!groupedOrders[DocNum]) {
             groupedOrders[DocNum] = {
+                DocEntry,
                 DocNum,
                 Estado,
                 CardCode,
@@ -38,6 +39,7 @@ export const transformSAPOrders = (orders) => {
                 FechaEntrega,
                 ShipToCode,
                 Terminal,
+                LineNum,
                 Price,
                 Tipo: Tipo || 'CIF', // Valor por defecto si no viene
                 GO2: 0,
@@ -61,68 +63,4 @@ export const formatFecha = (fechaISO) => {
     
     const [year, month, day] = fechaISO.split('-'); // Divide la fecha "YYYY-MM-DD"
     return `${day}-${month}-${year}`; // Devuelve "DD-MM-YYYY"
-};
-
-export const sendOrdersToSAP = async (orders) => {
-    try {
-        // Agrupar órdenes por cliente y fecha de entrega
-        const groupedOrders = orders.reduce((acc, order) => {
-            const key = `${order.CardCode}_${order.FechaEntrega}`;
-            if (!acc[key]) {
-                acc[key] = {
-                    CardCode: order.CardCode,
-                    DocDate: new Date().toISOString().split('T')[0],
-                    DocDueDate: order.FechaEntrega,
-                    DocumentLines: []
-                };
-            }
-            
-            // Agregar líneas de productos
-            const products = [
-                { code: 'C001', quantity: order.GO2, price: order.Price },
-                { code: 'C003', quantity: order.GO3, price: order.Price },
-                { code: 'C004', quantity: order.NS, price: order.Price },
-                { code: 'C005', quantity: order.NP, price: order.Price }
-            ];
-
-            products.forEach((product, index) => {
-                if (product.quantity > 0) {
-                    acc[key].DocumentLines.push({
-                        ItemCode: product.code,
-                        Quantity: product.quantity * 1000, // Convertir de m3 a litros
-                        UnitPrice: product.price
-                        //BaseEntry: order.DocNum,
-                        //BaseLine: index
-                    });
-                }
-            });
-
-            return acc;
-        }, {});
-
-        // Enviar cada grupo de órdenes como un remito separado
-        const results = await Promise.all(
-            Object.values(groupedOrders).map(async (orderGroup) => {
-                const response = await fetch('/api/sap/Orders', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(orderGroup)
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Error enviando remito: ${errorText}`);
-                }
-
-                return response.json();
-            })
-        );
-
-        return results;
-    } catch (error) {
-        console.error('❌ Error enviando remitos a SAP:', error);
-        throw error;
-    }
 };
