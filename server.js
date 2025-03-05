@@ -33,7 +33,7 @@ const loadSAPView = async (view) => {
     let allData = [];
 
     const fetchData = async (url) => {
-      console.log("📌 Solicitando datos a:", url);
+      //console.log("📌 Solicitando datos a:", url);
 
       const response = await fetch(url, {
         method: "GET",
